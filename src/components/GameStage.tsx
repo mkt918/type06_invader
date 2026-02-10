@@ -3,6 +3,7 @@ import { LANE_CONFIGS, GAME_CONSTANTS } from '../constants';
 import type { Note, GameState } from '../types';
 import { Lane } from './Lane';
 import { Note as NoteComponent } from './Note';
+import { KeyboardLayout } from './KeyboardLayout';
 import { useGameLoop } from '../hooks/useGameLoop';
 import { generateNotes } from '../utils/noteGenerator';
 import { playHitSound, initAudio } from '../utils/audio';
@@ -226,7 +227,7 @@ export const GameStage = () => {
                     <div className="text-3xl font-mono tracking-wider flex">
                         {PRACTICE_TEXT.split('').map((char, i) => {
                             // Calculate which notes are hit
-                            const hitCount = notes.filter(n => n.hit).length;
+                            const hitCount = notes.filter(n => n.hit || n.missed).length;
                             const isPast = i < hitCount;
                             const isCurrent = i === hitCount;
 
@@ -244,89 +245,87 @@ export const GameStage = () => {
             )}
 
             {/* Stage Container */}
-            <div className="relative w-full max-w-5xl h-full flex border-x border-slate-700 shadow-2xl bg-black/20">
+            <div className="relative w-full max-w-5xl h-full flex flex-col border-x border-slate-700 shadow-2xl bg-black/20">
 
-                {/* Lanes */}
-                {LANE_CONFIGS.map(config => (
-                    <Lane
-                        key={config.id}
-                        config={config}
-                        isActive={activeLanes.has(config.id)}
-                    />
-                ))}
-
-                {/* Global Judgement Line (Visual) */}
-                <div
-                    className="absolute w-full h-1 bg-cyan-400 shadow-[0_0_10px_cyan]"
-                    style={{ top: `${JUDGEMENT_LINE_Y}%` }}
-                ></div>
-
-                {/* Notes */}
-                {notes.map(note => {
-                    if (note.hit || note.missed) return null; // Don't render processed notes
-
-                    // Calculate Y position
-                    // Target Time corresponds to JUDGEMENT_LINE_Y (e.g. 80%)
-                    // We need to map time to pixels/percentage.
-                    // Let's say top (0%) is (TargetTime - SPAWN_TIME)
-                    // Actually, let's use pixels for smoother movement.
-
-                    /*
-                      Position calculation:
-                      0 at SpawnTime
-                      JudgementY at TargetTime
-                      
-                      Distance = Speed * (CurrentTime - SpawnTime)
-                      
-                      Wait, if we defined speed and position:
-                      Let's standardize: Judgement Line is at Y=500px (arbitrary).
-                      TargetTime is when Note reaches 500px.
-                      
-                      Y = (TargetTime - CurrentTime) * Speed * -1 + JudgementLine
-                      Y = JudgementLine - (TargetTime - CurrentTime) * Speed
-                      
-                      At CurrentTime = TargetTime, Y = JudgementLine.
-                      At CurrentTime = TargetTime - 1000, Y = JudgementLine - 1000*Speed.
-                    */
-
-                    // Let's use percentage height for responsiveness? No, pixels are easier for game logic.
-                    // We can use style={{ top: '80%' ... }} logic.
-
-                    // Let's try direct percentage based on time map?
-                    // Spawn at T-2000. Hit at T.
-                    // Current T goes from T-2000 to T.
-                    // Progress = (Current - Spawn) / (Hit - Spawn)
-                    // Y = Progress * JudgementY
-
-                    const timeProgress = (gameState.currentTime - note.spawnTime) / (note.targetTime - note.spawnTime);
-                    const topPercent = timeProgress * JUDGEMENT_LINE_Y;
-
-                    // Note: If speed is constant, spawnTime is dynamically set based on that speed.
-                    // note.spawnTime = note.targetTime - (Distance / Speed)
-
-                    if (timeProgress < 0 || timeProgress > 1.2) return null; // Out of view
-
-                    return (
-                        <NoteComponent
-                            key={note.id}
-                            note={note}
-                            y={topPercent}
-                            colorName={LANE_CONFIGS.find(l => l.id === note.lane)?.color || 'red'}
+                <div className="relative flex-1 flex">
+                    {/* Lanes */}
+                    {LANE_CONFIGS.map(config => (
+                        <Lane
+                            key={config.id}
+                            config={config}
+                            isActive={activeLanes.has(config.id)}
                         />
-                    );
-                })}
-                {/* Style override for Notes to support % units if Note.tsx expects number */}
-                {/* I defined Note.tsx to accept y: number and put it in style={{ top: y }} directly. 
-            So I should pass string with unit or change Note.tsx logic.
-            Let's assume Note.tsx takes number as pixels, but I want %.
-            Let's modify Note.tsx quickly or pass a string casted as any, or update Note.tsx.
-            Updated plan: I will update Note.tsx in next step if needed, but for now let's pass string to style?
-            TypeScript will complain.
-            Let's just use CSS generic styles in Note.tsx: `top: ${y}%`?
-            My previous write_to_file for Note.tsx used `style={{ top: y }}`. 
-            If I pass `y` as value 500, it becomes `top: 500`. Invalid CSS. Needs `px`.
-            So Note.tsx is buggy. I need to fix Note.tsx to add `px` or accept string.
-         */}
+                    ))}
+
+                    {/* Global Judgement Line (Visual) */}
+                    <div
+                        className="absolute w-full h-1 bg-cyan-400 shadow-[0_0_10px_cyan]"
+                        style={{ top: `${JUDGEMENT_LINE_Y}%` }}
+                    ></div>
+
+                    {/* Notes */}
+                    {notes.map(note => {
+                        if (note.hit || note.missed) return null; // Don't render processed notes
+
+                        // Calculate Y position
+                        // Target Time corresponds to JUDGEMENT_LINE_Y (e.g. 80%)
+                        // We need to map time to pixels/percentage.
+                        // Let's say top (0%) is (TargetTime - SPAWN_TIME)
+                        // Actually, let's use pixels for smoother movement.
+
+                        /*
+                          Position calculation:
+                          0 at SpawnTime
+                          JudgementY at TargetTime
+                          
+                          Distance = Speed * (CurrentTime - SpawnTime)
+                          
+                          Wait, if we defined speed and position:
+                          Let's standardize: Judgement Line is at Y=500px (arbitrary).
+                          TargetTime is when Note reaches 500px.
+                          
+                          Y = (TargetTime - CurrentTime) * Speed * -1 + JudgementLine
+                          Y = JudgementLine - (TargetTime - CurrentTime) * Speed
+                          
+                          At CurrentTime = TargetTime, Y = JudgementLine.
+                          At CurrentTime = TargetTime - 1000, Y = JudgementLine - 1000*Speed.
+                        */
+
+                        // Let's use percentage height for responsiveness? No, pixels are easier for game logic.
+                        // We can use style={{ top: '80%' ... }} logic.
+
+                        // Let's try direct percentage based on time map?
+                        // Spawn at T-2000. Hit at T.
+                        // Current T goes from T-2000 to T.
+                        // Progress = (Current - Spawn) / (Hit - Spawn)
+                        // Y = Progress * JudgementY
+
+                        const timeProgress = (gameState.currentTime - note.spawnTime) / (note.targetTime - note.spawnTime);
+                        const topPercent = timeProgress * JUDGEMENT_LINE_Y;
+
+                        // Note: If speed is constant, spawnTime is dynamically set based on that speed.
+                        // note.spawnTime = note.targetTime - (Distance / Speed)
+
+                        if (timeProgress < 0 || timeProgress > 1.2) return null; // Out of view
+
+                        return (
+                            <NoteComponent
+                                key={note.id}
+                                note={note}
+                                y={topPercent}
+                                colorName={LANE_CONFIGS.find(l => l.id === note.lane)?.color || 'red'}
+                            />
+                        );
+                    })}
+                </div>
+
+                {/* Keyboard Layout at the bottom */}
+                <div className="p-4 bg-slate-900 border-t border-white/10">
+                    <KeyboardLayout
+                        activeLanes={activeLanes}
+                        highlightKey={notes.find(n => !n.hit && !n.missed)?.char}
+                    />
+                </div>
             </div>
         </div>
     );
