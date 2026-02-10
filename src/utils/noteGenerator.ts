@@ -47,7 +47,7 @@ export const generateNotes = (text: string, bpm: number, startTime: number = 0, 
         if (map) {
             const targetTime = startTime + (currentIndex * msPerBeat);
             notes.push({
-                id: crypto.randomUUID(),
+                id: Math.random().toString(36).substring(2, 9),
                 char: char, // Keep original case? Lowercase for matching.
                 lane: map.lane,
                 spawnTime: targetTime - spawnPreTime,
