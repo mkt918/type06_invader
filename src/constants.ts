@@ -39,9 +39,9 @@ export const GAME_CONSTANTS = {
     JUDGEMENT_LINE_Y: 80, // % from top
     NOTE_SPEED: 0.5, // px/ms
     HIT_WINDOW: {
-        PERFECT: 50, // ms
-        GOOD: 100, // ms
-        MISS: 200, // ms
+        PERFECT: 65,  // ms (+30%)
+        GOOD: 130,    // ms (+30%)
+        MISS: 260,    // ms (+30%)
     },
-    SPAWN_PRE_TIME: 4000, // ms before target time to spawn (Halved speed)
+    SPAWN_PRE_TIME: 3077, // ms (+30% speed: 4000/1.3)
 };

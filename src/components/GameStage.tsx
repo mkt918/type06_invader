@@ -59,7 +59,7 @@ export const GameStage = () => {
     const startGame = () => {
         initAudio();
         const { romajiText: rt, displayWords: dw } = buildSong();
-        const initialNotes = generateNotes(rt, 40, 4000, 4000);
+        const initialNotes = generateNotes(rt, 40, 4000, GAME_CONSTANTS.SPAWN_PRE_TIME);
         setRomajiText(rt);
         setDisplayWords(dw);
         setNotes(initialNotes);
@@ -187,18 +187,16 @@ export const GameStage = () => {
         };
     }, []);
 
-    // 現在何文字目まで処理済みか（ローマ字ベース）
+    // 処理済みノーツ数（スペースはノーツを生成しないので純粋な文字数）
     const hitCount = notes.filter(n => n.hit || n.missed).length;
 
-    // 各単語の開始インデックスを計算（ローマ字のスペース区切り）
-    const wordRomajiLengths = romajiText
-        ? romajiText.split(' ').map(w => w.length)
-        : [];
-    let charOffset = 0;
-    const wordStates = wordRomajiLengths.map((len) => {
-        const start = charOffset;
-        const end = charOffset + len;
-        charOffset = end + 1; // +1 for space (which is skipped in notes)
+    // 各単語のノーツ開始インデックス（スペース抜き累積）
+    const wordRomajiList = romajiText ? romajiText.split(' ') : [];
+    let noteOffset = 0;
+    const wordStates = wordRomajiList.map((word) => {
+        const len = word.length;
+        const start = noteOffset;
+        noteOffset += len; // スペースはノーツなしなので足さない
         const wordHitCount = Math.max(0, Math.min(hitCount - start, len));
         const isDone = wordHitCount >= len;
         const isCurrent = !isDone && hitCount >= start;

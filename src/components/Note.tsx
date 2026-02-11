@@ -27,7 +27,7 @@ export const Note = ({ note, y, colorName, laneIndex }: NoteProps) => {
 
     return (
         <div
-            className={`absolute -translate-x-1/2 -translate-y-1/2 ${colorClass} w-14 h-14 flex items-center justify-center rounded-full text-white text-xl font-bold pointer-events-none transform-gpu z-10`}
+            className={`absolute -translate-x-1/2 -translate-y-1/2 ${colorClass} w-[4.5rem] h-[4.5rem] flex items-center justify-center rounded-full text-white text-2xl font-bold pointer-events-none transform-gpu z-10`}
             style={{ top: `${y}%`, left: `${leftPercent}%` }}
         >
             {note.char.toUpperCase()}
