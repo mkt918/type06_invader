@@ -189,7 +189,10 @@ export const GameStage = ({ skin, onGameEnd }: GameStageProps) => {
                 if (n.hit || n.missed) return false;
                 if (n.lane !== laneConfig.id) return false;
                 if (n.char !== key) return false;
-                if (Math.abs(currentMs - n.targetTime) > HIT_WINDOW.MISS) return false;
+                // Free-Timing Mode: Allow hitting any visible note
+                // if (Math.abs(currentMs - n.targetTime) > HIT_WINDOW.MISS) return false;
+                if (currentMs < n.spawnTime) return false; // Not yet visible
+                if (currentMs > n.targetTime + HIT_WINDOW.MISS) return false; // Already passed
 
                 // Sequential Check
                 if (n.wordId !== undefined && n.wordIndex !== undefined) {
@@ -205,23 +208,15 @@ export const GameStage = ({ skin, onGameEnd }: GameStageProps) => {
             });
 
             if (candidates.length > 0) {
+                // Target the closest one (or just the first one since sequence matters more)
                 const target = candidates.reduce((prev, curr) =>
                     Math.abs(currentMs - prev.targetTime) < Math.abs(currentMs - curr.targetTime) ? prev : curr
                 );
-                const diff = Math.abs(currentMs - target.targetTime);
 
-                let judgement: string;
-                let scoreAdd: number;
-                if (diff <= HIT_WINDOW.PERFECT) {
-                    judgement = 'PERFECT'; scoreAdd = 100;
-                    judgeCountRef.current.perfect++;
-                } else if (diff <= HIT_WINDOW.GOOD) {
-                    judgement = 'GOOD'; scoreAdd = 50;
-                    judgeCountRef.current.good++;
-                } else {
-                    judgement = 'OK'; scoreAdd = 10;
-                    judgeCountRef.current.ok++;
-                }
+                // Always PERFECT in Free-Timing Mode
+                const judgement = 'PERFECT';
+                const scoreAdd = 100;
+                judgeCountRef.current.perfect++;
 
                 const newNotes = notesRef.current.map(n => n.id === target.id ? { ...n, hit: true } : n);
                 notesRef.current = newNotes;
