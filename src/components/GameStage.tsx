@@ -88,7 +88,7 @@ export const GameStage = ({ skin, onGameEnd }: GameStageProps) => {
         gameEndedRef.current = false;
         setHasBomb(true);
         const { romajiText: rt, displayWords: dw } = buildSong();
-        const initialNotes = generateNotes(rt, 40, 4000, GAME_CONSTANTS.SPAWN_PRE_TIME);
+        const initialNotes = generateNotes(rt, 80, 4000, GAME_CONSTANTS.SPAWN_PRE_TIME);
         setRomajiText(rt);
         setDisplayWords(dw);
         setNotes(initialNotes);

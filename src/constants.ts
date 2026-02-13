@@ -37,11 +37,11 @@ export const WORD_LIST: { display: string; romaji: string }[] = [
 
 export const GAME_CONSTANTS = {
     JUDGEMENT_LINE_Y: 80, // % from top
-    NOTE_SPEED: 0.5, // px/ms
+    NOTE_SPEED: 0.25, // px/ms (速度1/2)
     HIT_WINDOW: {
         PERFECT: 65,  // ms (+30%)
         GOOD: 130,    // ms (+30%)
         MISS: 260,    // ms (+30%)
     },
-    SPAWN_PRE_TIME: 3077, // ms (+30% speed: 4000/1.3)
+    SPAWN_PRE_TIME: 6154, // ms (速度1/2のため2倍: 3077*2)
 };
